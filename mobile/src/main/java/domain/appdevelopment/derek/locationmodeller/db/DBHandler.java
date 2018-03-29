@@ -73,7 +73,7 @@ public class DBHandler extends SQLiteOpenHelper
         SQLiteDatabase db = getReadableDatabase();
         //The where statement in which the allowance of the difference in position is specified.
         String where = String.format("%s-(%s) <= ? and %s-(%s) <= ?",KEY_LAT,lat,KEY_LNG,lon);
-        String[] allow = {String.valueOf(0.0001),String.valueOf(0.0001)};
+        String[] allow = {String.valueOf(0.00015),String.valueOf(0.00015)};
         Cursor cur = db.query(TABLE_LOC,null,where,allow,null,null,null);
         return cur;
     }
