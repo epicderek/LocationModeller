@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -23,6 +24,7 @@ import com.google.android.gms.location.LocationServices;
 
 import java.util.List;
 
+import static domain.appdevelopment.derek.locationmodeller.entity_relationship.LocConstants.*;
 import domain.appdevelopment.derek.locationmodeller.db.DBHandler;
 import domain.appdevelopment.derek.locationmodeller.entity_relationship.LocationStay;
 import domain.appdevelopment.derek.locationmodeller.entity_relationship.Place;
@@ -87,8 +89,10 @@ public class MainActivity extends AppCompatActivity
             {
                 display = new Intent(MainActivity.this,DisplayTable.class);
                 List<LocationStay> stays = db.getCurrentStays();
-                String dis = stays.toString().replaceAll(",","\n");
-                display.putExtra("table",dis);
+                StringBuilder builder = new StringBuilder();
+                for(LocationStay holder: stays)
+                    builder.append(holder.toString()).append(((Place)db.getPlaceById((long)holder.getValueByField(KEY_PLID))).getValueByField(KEY_STREET_ADDRESS)).append("\n");
+                display.putExtra("table",builder.toString());
                 startActivity(display);
             }
         });
@@ -139,7 +143,6 @@ public class MainActivity extends AppCompatActivity
                 client.requestLocationUpdates(req, callback, null);
             }
         }
-
     }
 
    protected void onDestroy()

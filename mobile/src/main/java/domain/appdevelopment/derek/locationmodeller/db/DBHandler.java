@@ -30,10 +30,6 @@ public class DBHandler extends SQLiteOpenHelper
      */
     private Long lastStay;
 
-    {
-        Log.wtf("See","ReRuned");
-    }
-
     public DBHandler(Context con)
     {
         super(con,DATA_BASE_NAME,null,DATA_BASE_VERSION);
@@ -51,7 +47,6 @@ public class DBHandler extends SQLiteOpenHelper
                         "%s integer primary key autoincrement, foreign key (%s) references %s (%s));",
                 TABLE_LOC_STAY,KEY_START_TIME,KEY_END_TIME,KEY_DURATION,KEY_PLID,
                 KEY_STAY_ID,KEY_PLID,TABLE_LOC,KEY_PLID);
-        String LAST_STAY_TABLE = "";
         db.execSQL(CREATE_LOC_TABLE);
         db.execSQL(CREATE_STAY_TABLE);
     }
@@ -115,9 +110,7 @@ public class DBHandler extends SQLiteOpenHelper
     public Place getPlaceById(long id)
     {
         SQLiteDatabase db = getReadableDatabase();
-        String where = String.format("%s = ?",KEY_PLID);
-        String[] cons = {String.valueOf(id)};
-        Cursor cur = db.query(TABLE_LOC,null,where,cons,null,null,null);
+        Cursor cur = db.rawQuery(String.format("select * from %s where %s=%s",TABLE_LOC,KEY_PLID,id),null);
         Object[] que = new Object[14];
         if(cur.moveToNext())
         {
