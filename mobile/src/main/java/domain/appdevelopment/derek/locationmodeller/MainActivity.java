@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity
                         Toast.makeText(MainActivity.this, "Null Location Result", Toast.LENGTH_SHORT).show();
                     else {
                         Location currentLoc = result.getLocations().get(0);
-                        db.updateStay(currentLoc.getTime(), currentLoc.getLatitude(), currentLoc.getLongitude());
+                        db.updateStay(currentLoc.getTime(), currentLoc.getLatitude(), currentLoc.getLongitude(),MainActivity.this);
                     }
                 }
             };
@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity
                             Toast.makeText(MainActivity.this, "Null Location Result", Toast.LENGTH_SHORT).show();
                         else {
                             Location currentLoc = result.getLocations().get(0);
-                            db.updateStay(currentLoc.getTime(), currentLoc.getLatitude(), currentLoc.getLongitude());
+                            db.updateStay(currentLoc.getTime(), currentLoc.getLatitude(), currentLoc.getLongitude(),MainActivity.this);
                         }
                     }
                 };

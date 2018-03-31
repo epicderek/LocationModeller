@@ -5,6 +5,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -28,6 +30,10 @@ public class DBHandler extends SQLiteOpenHelper
      */
     private Long lastStay;
 
+    {
+        Log.wtf("See","ReRuned");
+    }
+
     public DBHandler(Context con)
     {
         super(con,DATA_BASE_NAME,null,DATA_BASE_VERSION);
@@ -45,6 +51,7 @@ public class DBHandler extends SQLiteOpenHelper
                         "%s integer primary key autoincrement, foreign key (%s) references %s (%s));",
                 TABLE_LOC_STAY,KEY_START_TIME,KEY_END_TIME,KEY_DURATION,KEY_PLID,
                 KEY_STAY_ID,KEY_PLID,TABLE_LOC,KEY_PLID);
+        String LAST_STAY_TABLE = "";
         db.execSQL(CREATE_LOC_TABLE);
         db.execSQL(CREATE_STAY_TABLE);
     }
@@ -72,9 +79,8 @@ public class DBHandler extends SQLiteOpenHelper
     {
         SQLiteDatabase db = getReadableDatabase();
         //The where statement in which the allowance of the difference in position is specified.
-        String where = String.format("%s-(%s) <= ? and %s-(%s) <= ?",KEY_LAT,lat,KEY_LNG,lon);
-        String[] allow = {String.valueOf(0.00015),String.valueOf(0.00015)};
-        Cursor cur = db.query(TABLE_LOC,null,where,allow,null,null,null);
+        String where = String.format("select * from %s where abs(cast(%s as real)-cast(%s as real))<=0.00015 and abs(cast(%s as real)-cast(%s as real))<=0.00015",TABLE_LOC,KEY_LAT,lat,KEY_LNG,lon);
+        Cursor cur = db.rawQuery(where,null);
         return cur;
     }
 
@@ -215,7 +221,7 @@ public class DBHandler extends SQLiteOpenHelper
      * @param lat The latitude.
      * @param lng The longitude.
      */
-    public void updateStay(long time, double lat, double lng)
+    public void updateStay(long time, double lat, double lng, Context con)
     {
         SQLiteDatabase db = getWritableDatabase();
         Cursor stay = lastStay==null?null:db.query(TABLE_LOC_STAY,null,String.format("%s = ?",KEY_STAY_ID),new String[]{String.valueOf(lastStay)},null,null,null);
@@ -234,6 +240,8 @@ public class DBHandler extends SQLiteOpenHelper
         //If this place already exists.
         if((cur=dupSearch(lat,lng)).moveToNext())
         {
+            double latE = Math.abs(cur.getDouble(cur.getColumnIndex(KEY_LAT))-lat);
+            double lonE = Math.abs(cur.getDouble(cur.getColumnIndex(KEY_LNG))-lng);
             this_loc_id = cur.getLong(cur.getColumnIndex(KEY_PLID));
             //If this place was the last stay the user occasioned.
             if(this_loc_id==last_loc_id)
@@ -254,6 +262,7 @@ public class DBHandler extends SQLiteOpenHelper
         //Finalize the previous stay if a previous stay exists.
         if(lastStay!=null)
         {
+            Toast.makeText(con,"Last Stage",Toast.LENGTH_SHORT).show();
             ContentValues vals = new ContentValues();
             vals.put(KEY_END_TIME,time);
             vals.put(KEY_DURATION,time-startTime);
