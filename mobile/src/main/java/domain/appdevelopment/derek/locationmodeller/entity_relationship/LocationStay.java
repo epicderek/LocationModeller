@@ -27,12 +27,11 @@ public class LocationStay extends Entity
 
     public String toString()
     {
-        return String.format("%s Stay from %s to %s\nof %s\nat %s",
+        return String.format("%s Stay\nfrom %s\nto %s\nof %s\nat\n",
                 getValueByField(KEY_STAY_ID),
                 getValueByField(KEY_START_TIME),
                 getValueByField(KEY_END_TIME),
-                getValueByField(KEY_DURATION),
-                getValueByField(KEY_PLID));
+                getValueByField(KEY_DURATION));
     }
 
 }

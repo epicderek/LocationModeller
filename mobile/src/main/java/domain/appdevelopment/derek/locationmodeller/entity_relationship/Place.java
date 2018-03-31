@@ -210,7 +210,7 @@ public class Place extends Entity
     {
         if(containsField(KEY_STREET_ADDRESS))
             Log.v("GeocodingProcess","Process Not Complete");
-        return String.format("%s id%s",getValueByField(KEY_STREET_ADDRESS),getValueByField(KEY_PLID));
+        return String.format("%s",getValueByField(KEY_STREET_ADDRESS));
     }
 }
 
