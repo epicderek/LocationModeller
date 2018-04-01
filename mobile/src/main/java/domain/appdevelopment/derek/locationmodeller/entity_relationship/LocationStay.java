@@ -50,7 +50,7 @@ public class LocationStay extends Entity
         String startTime = FORMATTER.format(CALENDAR.getTime());
         CALENDAR.setTime(new Date((long)getValueByField(KEY_END_TIME)));
         String endTime = FORMATTER.format(CALENDAR.getTime());
-        long duration = ((long)getValueByField(KEY_START_TIME)-(long)getValueByField(KEY_END_TIME));
+        long duration = ((long)getValueByField(KEY_END_TIME)-(long)getValueByField(KEY_START_TIME));
         long hour = duration/3600000;
         duration = duration%3600000;
         long min = duration/60000;
