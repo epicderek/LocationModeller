@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -22,36 +23,26 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
+import java.io.FileNotFoundException;
 import java.util.List;
 
 import static domain.appdevelopment.derek.locationmodeller.entity_relationship.LocConstants.*;
 import domain.appdevelopment.derek.locationmodeller.db.DBHandler;
 import domain.appdevelopment.derek.locationmodeller.entity_relationship.LocationStay;
 import domain.appdevelopment.derek.locationmodeller.entity_relationship.Place;
+import domain.appdevelopment.derek.locationmodeller.export.Export;
 
 public class MainActivity extends AppCompatActivity
 {
     private static final int GPS_PERMISSION = 0;
     /**
-     * The google location service provider.
-     */
-    private FusedLocationProviderClient client;
-    /**
-     * The call back for the location service client.
-     */
-    private LocationCallback callback;
-    /**
-     * The locaiton request of this activity.
-     */
-    private LocationRequest req;
-    /**
      * The database that stores the location information.
      */
-    private DBHandler db;
+    protected static DBHandler db;
     /**
-     * The text view for display
+     * The button to export the data collected by now.
      */
-    private Button loc_dis;
+    private Button export;
     /**
      * The button to control the display of collected LocationStays.
      */
@@ -68,19 +59,33 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         db = new DBHandler(this);
         //Fetch the buttons for display.
-        loc_dis = findViewById(R.id.place_display);
+        export = findViewById(R.id.export);
         stay_dis = findViewById(R.id.stay_display);
-        loc_dis.setOnClickListener(new Button.OnClickListener()
+        export.setOnClickListener(new Button.OnClickListener()
         {
+            @SuppressLint("StaticFieldLeak")
             public void onClick(View view)
             {
                 display = new Intent(MainActivity.this,DisplayTable.class);
-                List<Place> places = db.getAllPlaces();
-                StringBuilder builder = new StringBuilder();
-                for(Place pla: places)
-                    builder.append(pla.toString()).append("\n");
-                display.putExtra("table",builder.toString());
-                startActivity(display);
+                Toast.makeText(MainActivity.this,"Exporting LocationStay Statistics...",Toast.LENGTH_LONG).show();
+                new AsyncTask<Void,Void,Void>(){
+                    @Override
+                    protected Void doInBackground(Void... voids) {
+                        try
+                        {
+                            Export.exportCSV(db);
+                        }catch(FileNotFoundException ex)
+                        {
+                            Log.e("ExportFailure","Literally Impossible");
+                        }
+                        return null;
+                    }
+
+                    protected void onPostExecute(Void voi)
+                    {
+                        Toast.makeText(MainActivity.this,"LocationStay Export Successful!",Toast.LENGTH_LONG).show();
+                    }
+                }.execute();
             }
         });
         stay_dis.setOnClickListener(new Button.OnClickListener()
@@ -99,56 +104,33 @@ public class MainActivity extends AppCompatActivity
         //Ask for gps permission.
         if (ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, GPS_PERMISSION);
-        else {
-            client = LocationServices.getFusedLocationProviderClient(this);
-            //Initializing call back behavior for database storage.
-            callback = new LocationCallback() {
-                public void onLocationResult(LocationResult result) {
-                    if (result == null)
-                        Toast.makeText(MainActivity.this, "Null Location Result", Toast.LENGTH_SHORT).show();
-                    else {
-                        Location currentLoc = result.getLocations().get(0);
-                        db.updateStay(currentLoc.getTime(), currentLoc.getLatitude(), currentLoc.getLongitude(),MainActivity.this);
-                    }
-                }
-            };
-            req = LocationRequest.create();
-            req.setInterval(10000);
-            req.setFastestInterval(10000);
-            req.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-            client.requestLocationUpdates(req, callback, null);
+        else
+        {
+            //Start the location collection and clustering service.
+            Intent inte = new Intent(this,ClusterService.class);
+            startService(inte);
         }
     }
 
     @SuppressLint("MissingPermission")
     public void onRequestPermissionsResult(int id, String[] perms, int[] results) {
         switch (id) {
-            case GPS_PERMISSION: {
-                client = LocationServices.getFusedLocationProviderClient(this);
-                //Initializing call back behavior for database storage.
-                callback = new LocationCallback() {
-                    public void onLocationResult(LocationResult result) {
-                        if (result == null)
-                            Toast.makeText(MainActivity.this, "Null Location Result", Toast.LENGTH_SHORT).show();
-                        else {
-                            Location currentLoc = result.getLocations().get(0);
-                            db.updateStay(currentLoc.getTime(), currentLoc.getLatitude(), currentLoc.getLongitude(),MainActivity.this);
-                        }
-                    }
-                };
-                req = LocationRequest.create();
-                req.setInterval(10000);
-                req.setFastestInterval(10000);
-                req.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-                client.requestLocationUpdates(req, callback, null);
+            case GPS_PERMISSION:
+            {
+                //Initialize the location collection and clustering service.
+                Intent intent = new Intent(this,ClusterService.class);
+                startService(intent);
             }
         }
     }
 
-   protected void onDestroy()
-   {
-       super.onDestroy();
-       client.removeLocationUpdates(callback);
-   }
+    /**
+     * Terminate the service.
+     */
+    public void onDestroy()
+    {
+        super.onDestroy();
+        stopService(new Intent(this,ClusterService.class));
+    }
 
 }
