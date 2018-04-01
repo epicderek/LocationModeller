@@ -1,5 +1,10 @@
 package domain.appdevelopment.derek.locationmodeller.entity_relationship;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+
 import static domain.appdevelopment.derek.locationmodeller.entity_relationship.LocConstants.*;
 
 /**
@@ -8,6 +13,20 @@ import static domain.appdevelopment.derek.locationmodeller.entity_relationship.L
  */
 public class LocationStay extends Entity
 {
+    /**
+     * A calendar used for the conversion of timestamp to dates.
+     */
+    private static final Calendar CALENDAR = Calendar.getInstance();
+    /**
+     * A formatter for display of date.
+     */
+    private static final SimpleDateFormat FORMATTER = new SimpleDateFormat();
+
+    static
+    {
+        FORMATTER.setTimeZone(TimeZone.getTimeZone("EST"));
+    }
+
     /**
      * Construct a LocationStay object retrieved from the database.
      * @param startTime The starting time of this stay.
@@ -27,11 +46,21 @@ public class LocationStay extends Entity
 
     public String toString()
     {
+        CALENDAR.setTime(new Date((long)getValueByField(KEY_START_TIME)));
+        String startTime = FORMATTER.format(CALENDAR.getTime());
+        CALENDAR.setTime(new Date((long)getValueByField(KEY_END_TIME)));
+        String endTime = FORMATTER.format(CALENDAR.getTime());
+        long duration = ((long)getValueByField(KEY_START_TIME)-(long)getValueByField(KEY_END_TIME));
+        long hour = duration/3600000;
+        duration = duration%3600000;
+        long min = duration/60000;
+        duration = duration%60000;
+        long sec = duration/1000;
         return String.format("%s Stay\nfrom %s\nto %s\nof %s\nat\n",
                 getValueByField(KEY_STAY_ID),
-                getValueByField(KEY_START_TIME),
-                getValueByField(KEY_END_TIME),
-                getValueByField(KEY_DURATION));
+                startTime,
+                endTime,
+                String.format("%s hours %s minutes %s seconds",hour,min,sec));
     }
 
 }
