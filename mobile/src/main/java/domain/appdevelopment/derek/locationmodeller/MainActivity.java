@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity
             };
             req = LocationRequest.create();
             req.setInterval(10000);
-            req.setFastestInterval(1000);
+            req.setFastestInterval(10000);
             req.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             client.requestLocationUpdates(req, callback, null);
         }
@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity
                 };
                 req = LocationRequest.create();
                 req.setInterval(10000);
-                req.setFastestInterval(1000);
+                req.setFastestInterval(10000);
                 req.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
                 client.requestLocationUpdates(req, callback, null);
             }
