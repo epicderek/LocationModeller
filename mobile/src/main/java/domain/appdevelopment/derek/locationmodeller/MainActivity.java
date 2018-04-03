@@ -24,6 +24,7 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 import static domain.appdevelopment.derek.locationmodeller.entity_relationship.LocConstants.*;
@@ -74,7 +75,7 @@ public class MainActivity extends AppCompatActivity
                         try
                         {
                             Export.exportCSV(db);
-                        }catch(FileNotFoundException ex)
+                        }catch(IOException ex)
                         {
                             Log.e("ExportFailure","Literally Impossible");
                         }
