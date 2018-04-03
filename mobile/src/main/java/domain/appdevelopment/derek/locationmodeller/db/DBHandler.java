@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -284,6 +285,18 @@ public class DBHandler extends SQLiteOpenHelper
                     cur.getLong(cur.getColumnIndex(KEY_STAY_ID))));
         return stays;
     }
+
+//    private class Resolver extends AsyncTask<Void,Void,Void>
+//    {
+//
+//        @Override
+//        protected Void doInBackground(Void... voids)
+//        {
+//            SQLiteDatabase db = getReadableDatabase();
+//            String where = "";
+//            return null;
+//        }
+//    }
 
 
 
