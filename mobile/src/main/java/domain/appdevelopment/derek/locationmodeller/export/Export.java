@@ -5,9 +5,12 @@ import domain.appdevelopment.derek.locationmodeller.db.DBHandler;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,6 +27,12 @@ public class Export
      */
     private static final Calendar CALENDAR = Calendar.getInstance();
     private static final SimpleDateFormat FORMATTER = new SimpleDateFormat();
+    /**
+     * The single output file to be written.
+     */
+    private static final File output = new File(String.format("%s%s%s",android.os.Environment.getExternalStorageDirectory().getAbsolutePath(),File.separator,"LocationStayData.csv"));
+
+    private static boolean fileCreated;
 
     static
     {
@@ -36,17 +45,21 @@ public class Export
      * Export the location stay information in the standard format of the representation of a LocationStay object
      * in its various fields in the form of a .csv file into the path of default system storage in android.
      * @param db The database to read from.
-     * @exception FileNotFoundException
+     * @exception IOException
      */
-    public static void exportCSV(DBHandler db) throws FileNotFoundException
+    public static void exportCSV(DBHandler db) throws IOException
     {
         String defaultDirectory = android.os.Environment.getExternalStorageDirectory().getAbsolutePath();
-        PrintWriter wri = new PrintWriter(String.format("%s%s%s",defaultDirectory,File.separator,"LocationStayData.csv"));
+        FileWriter wri = new FileWriter(new File(String.format("%s%s%s",defaultDirectory,File.separator,"LocationStayData.csv")),true);
         //Title the columns.
         String liner = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s",
                 "Start Time","End Time","Duration",KEY_STREET_ADDRESS,KEY_PLACE_TYPE,KEY_STREET_NUM,KEY_ROUTE,KEY_NEIGHBORHOOD,KEY_LOCALITY,
                 KEY_ADMINISTRATIVE2,KEY_ADMINISTRATIVE1,KEY_COUNTRY,KEY_ZIP);
-        wri.write(liner);
+        if(!fileCreated)
+        {
+            wri.write(liner);
+            fileCreated = true;
+        }
         SQLiteDatabase read = db.getReadableDatabase();
         Cursor cursor = read.rawQuery(String.format("select * from %s",TABLE_LOC_STAY),null);
         while(cursor.moveToNext())
@@ -61,13 +74,16 @@ public class Export
             long min = duration/60000;
             duration = duration%60000;
             long sec = duration/1000;
+            Cursor cur = read.rawQuery(String.format("select * from %s where %s=%s",TABLE_LOC,KEY_PLID,cursor.getLong(cursor.getColumnIndex(KEY_PLID))),null);
+            if(!cur.moveToNext())
+                throw new RuntimeException("Storage Error: Place Not Found");
             String line = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s%s",
                     startTime,endTime,String.format("%s hours %s minutes %s seconds",hour,min,sec),
-                    cursor.getString(cursor.getColumnIndex(KEY_STREET_ADDRESS)),cursor.getString(cursor.getColumnIndex(KEY_PLACE_TYPE)),
-                    cursor.getString(cursor.getColumnIndex(KEY_STREET_NUM)),cursor.getString(cursor.getColumnIndex(KEY_ROUTE)),
-                    cursor.getString(cursor.getColumnIndex(KEY_NEIGHBORHOOD)),cursor.getString(cursor.getColumnIndex(KEY_LOCALITY)),
-                    cursor.getString(cursor.getColumnIndex(KEY_ADMINISTRATIVE2)),cursor.getString(cursor.getColumnIndex(KEY_ADMINISTRATIVE1)),
-                    cursor.getString(cursor.getColumnIndex(KEY_COUNTRY)),cursor.getString(cursor.getColumnIndex(KEY_ZIP)),"\n");
+                    cur.getString(cur.getColumnIndex(KEY_STREET_ADDRESS)),cur.getString(cur.getColumnIndex(KEY_PLACE_TYPE)),
+                    cur.getString(cur.getColumnIndex(KEY_STREET_NUM)),cur.getString(cur.getColumnIndex(KEY_ROUTE)),
+                    cur.getString(cur.getColumnIndex(KEY_NEIGHBORHOOD)),cur.getString(cur.getColumnIndex(KEY_LOCALITY)),
+                    cur.getString(cur.getColumnIndex(KEY_ADMINISTRATIVE2)),cur.getString(cur.getColumnIndex(KEY_ADMINISTRATIVE1)),
+                    cur.getString(cur.getColumnIndex(KEY_COUNTRY)),cur.getString(cur.getColumnIndex(KEY_ZIP)),"\n");
             wri.write(line);
         }
         wri.write("\n\n");
